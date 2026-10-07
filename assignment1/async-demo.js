@@ -49,8 +49,12 @@ fs.writeFile(file, "Hello, async world!", (err) => {
   // 3. Async/Await style
 
   async function getData() {
-    const result = await promiseStyle(file);
-    console.log(`async/await: ${result}`);
+    try {
+      const result = await promiseStyle(file);
+      console.log(`async/await: ${result}`);
+    } catch (err) {
+      console.log(err);
+    }
   }
   getData();
 });

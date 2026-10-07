@@ -11,7 +11,7 @@ if (!fs.existsSync(sampleFilesDir)) {
 const joinedPath = path.join(sampleFilesDir, "folder", "file.txt");
 // OS module
 console.log(`Platform: ${os.platform()}`);
-console.log(`CPU: ${os.arch()}`);
+console.log(`CPU: ${os.cpus()[0].model}`);
 console.log(`Total Memory: ${os.totalmem()}`);
 
 // Path module
