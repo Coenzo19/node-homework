@@ -18,11 +18,10 @@ function logon(req, res) {
       user.email === req.body.email && user.password === req.body.password
   );
   if (!user) {
-    return res.status(401);
-    
+    return res.status(401).send();
   }
   global.user_id = user;
-  res.status(200).json({
+  return res.status(200).json({
     name: user.name,
     email: user.email
   });
@@ -30,7 +29,7 @@ function logon(req, res) {
 
 function logoff(req, res) {
   global.user_id = null;
-  res.status(200);
+  return res.status(200).send();
 }
 
-module.exports = {register, logon, logoff};
+module.exports = { register, logon, logoff};
