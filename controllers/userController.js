@@ -29,7 +29,7 @@ function logon(req, res) {
 }
 
 function logoff(req, res) {
-  global.user = null;
+  global.user_id = null;
   res.status(200);
 }
 

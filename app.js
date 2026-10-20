@@ -29,8 +29,8 @@ app.all("/{*splat}", (req, res) => {
   });
 });
 
-app.use(notFoundHandler);
-app.use(errorHandler);
+app.use(notFoundHandler.notFound);
+app.use(errorHandler.errorHandler);
 
 const port = process.env.PORT || 3000;
 
