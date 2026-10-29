@@ -1,9 +1,37 @@
-function register(req, res) {
+const crypto = require("crypto");
+const util = require("util");
+const scrypt = util.promisify(crypto.scrypt);
+const {userSchema} = require("../validation/userSchema");
+
+async function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = await scrypt(password, salt, 64);
+  return `${salt}:${derivedKey.toString("hex")}`;
+}
+
+async function comparePassword(inputPassword, storedHash) {
+  const [salt, key] = storedHash.split(":");
+  const keyBuffer = Buffer.from(key, "hex");
+  const derivedKey = await scrypt(inputPassword, salt, 64);
+  return crypto.timingSafeEqual(keyBuffer, derivedKey);
+}
+
+async function register(req, res) {
+  const {error, value} = userSchema.validate(req.body, {abortEarly: false});
+  if (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }
+
+  const hashedPassword = await hashPassword(value.password);
+
   const newUser = {
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password
+    name: value.name,
+    email: value.email,
+    hashedPassword: hashedPassword
   };
+
   global.users.push(newUser);
   global.user_id = newUser;
   res.status(201).json({
@@ -12,14 +40,20 @@ function register(req, res) {
   });
 }
 
-function logon(req, res) {
-  const user = global.users.find(
-    (user) =>
-      user.email === req.body.email && user.password === req.body.password
-  );
+async function logon(req, res) {
+  const user = global.users.find((user) => user.email === req.body.email);
   if (!user) {
     return res.status(401).send();
   }
+
+  const goodCredentials = await comparePassword(
+    req.body.password,
+    user.hashedPassword
+  );
+  if (!goodCredentials) {
+    return res.status(401).send();
+  }
+
   global.user_id = user;
   return res.status(200).json({
     name: user.name,
@@ -32,4 +66,4 @@ function logoff(req, res) {
   return res.status(200).send();
 }
 
-module.exports = { register, logon, logoff};
+module.exports = {register, logon, logoff};
