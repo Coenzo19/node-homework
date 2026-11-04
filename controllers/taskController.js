@@ -53,7 +53,7 @@ async function show(req, res) {
     return res.status(404).send();
   }
 
-  res.status(200).json(result);
+  res.status(200).json(result.rows[0]);
 }
 
 async function update(req, res) {
@@ -104,7 +104,7 @@ async function deleteTask(req, res) {
     return res.status(404).send();
   }
   const deletedTask = result.rows[0];
-  
+
   return res.status(200).json(deletedTask);
 }
 
