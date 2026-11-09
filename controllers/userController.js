@@ -41,7 +41,7 @@ async function register(req, res, next) {
       // here you return the 400 and the error message.  Use a return statement, so that
       // you don't keep going in this function
       return res.status(400).json({
-        message: e.details
+        message: "Email already exists"
       });
     }
     return next(e); // all other errors get passed to the error handler
