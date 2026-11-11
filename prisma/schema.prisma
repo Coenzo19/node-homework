@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique @db.VarChar(255)
+  name            String   @db.VarChar(30)
+  hashedPassword String   @db.VarChar(255) @map("hashed_password")
+  createdAt      DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  Task           Task[] 
+  @@map("users")
+}
+
 model Task {
   id           Int      @id @default(autoincrement())
   title        String   @db.VarChar(255)
@@ -19,12 +29,4 @@ model Task {
   @@map("tasks")
 }
 
-model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique @db.VarChar(255)
-  name            String   @db.VarChar(30)
-  hashedPassword String   @db.VarChar(255) @map("hashed_password")
-  createdAt      DateTime @default(now()) @db.Timestamp(6) @map("created_at")
-  Task           Task[] 
-  @@map("users")
-}
+
