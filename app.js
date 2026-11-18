@@ -1,11 +1,11 @@
 const express = require("express");
 const app = express();
-//const pool = require("./db/pg-pool");
 const prisma = require("./db/prisma");
 
 const timeRouter = require("./routes/timeRoutes");
 const userRouter = require("./routes/userRoutes");
 const taskRouter = require("./routes/taskRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 
 const errorHandler = require("./middleware/error-handler");
 const notFoundHandler = require("./middleware/not-found");
@@ -17,6 +17,7 @@ app.use(express.json());
 app.use("/api/users", userRouter);
 app.use("/api", timeRouter);
 app.use("/api/tasks", authMiddleware, taskRouter);
+app.use("/api/analytics", authMiddleware, analyticsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
@@ -30,7 +31,6 @@ app.post("/testpost", (req, res) => {
 
 app.get("/health", async (req, res) => {
   try {
-    //await pool.query("SELECT 1");
     await prisma.$queryRaw`SELECT 1`;
     res.json({status: "ok", db: "connected"});
   } catch (err) {
@@ -73,7 +73,7 @@ async function shutdown(code = 0) {
       });
     });
     console.log("HTTP server closed.");
-    //await pool.end();
+
     await prisma.$disconnect();
     console.log("Prisma disconnected");
   } catch (err) {
