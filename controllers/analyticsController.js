@@ -102,14 +102,14 @@ async function getUsersWithStats(req, res) {
     Task: user.Task
   }));
 
-  const totalTasks = await prisma.task.count();
+  const totalUsers = await prisma.user.count();
 
   const pagination = {
     page: page,
     limit: limit,
-    totalTask: totalTasks,
-    pages: Math.ceil(page * limit),
-    hasNext: limit * page < totalTasks,
+    total: totalUsers,
+    pages: Math.ceil(totalUsers / limit),
+    hasNext: limit * page < totalUsers,
     hasPrev: page > 1
   };
   return res.status(200).json({users, pagination});
@@ -118,7 +118,9 @@ async function searchTasks(req, res) {
   const limit = parseInt(req.query.limit) || 20;
 
   if (!req.query.q || req.query.q.trim().length < 2) {
-    return res.status(400).send();
+    return res.status(400).json({
+      message:'search characters cannot be less then 1'
+    });
   }
 
   const searchQuery = req.query.q;

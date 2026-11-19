@@ -1,8 +1,7 @@
 const {
   taskSchema,
   patchTaskSchema,
-  paginationSchema,
-  taskFilterSchema
+  querySchema
 } = require("../validation/taskSchema");
 const prisma = require("../db/prisma");
 
@@ -77,7 +76,7 @@ async function index(req, res) {
   const whereClause = {userId: global.user_id};
   const dataFilter = {};
 
-  const {error, value} = paginationSchema.validate(req.query, {
+  const {error, value} = querySchema.validate(req.query, {
     abortEarly: false
   });
   if (error) {
@@ -88,44 +87,27 @@ async function index(req, res) {
 
   const skip = (value.page - 1) * value.limit;
 
-  if (req.query.find) {
+  if (value.find) {
     whereClause.title = {
-      contains: req.query.find,
+      contains: value.find,
       mode: "insensitive"
     };
   }
-  if (req.query.isCompleted !== undefined) {
-    whereClause.isCompleted = req.query.isCompleted === "true";
+  if (value.isCompleted !== undefined) {
+    whereClause.isCompleted = value.isCompleted;
   }
-  if (req.query.priority) {
-    whereClause.priority = req.query.priority;
+  if (value.priority) {
+    whereClause.priority = value.priority;
   }
-  if (req.query.min_date) {
-    dataFilter.gte = new Date(req.query.min_date);
+  if (value.min_date) {
+    dataFilter.gte = value.min_date;
   }
-  if (req.query.max_date) {
-    dataFilter.lte = new Date(req.query.max_date);
+  if (value.max_date) {
+    dataFilter.lte = value.max_date;
   }
   if (Object.keys(dataFilter).length !== 0) {
     whereClause.createdAt = dataFilter;
   }
-
-  const getOrderBy = (query) => {
-    const validSortFields = [
-      "title",
-      "priority",
-      "createdAt",
-      "id",
-      "isCompleted"
-    ];
-    const sortBy = query.sortBy || "createdAt";
-    const sortDirection = query.sortDirection === "asc" ? "asc" : "desc";
-
-    if (validSortFields.includes(sortBy)) {
-      return {[sortBy]: sortDirection};
-    }
-    return {createdAt: "desc"};
-  };
 
   const tasks = await prisma.task.findMany({
     where: whereClause,
@@ -144,7 +126,9 @@ async function index(req, res) {
     },
     take: value.limit,
     skip: skip,
-    orderBy: getOrderBy(req.query)
+    orderBy: {
+      [value.sortBy]: value.sortDirection
+    }
   });
   const totalTasks = await prisma.task.count({
     where: whereClause
@@ -160,7 +144,9 @@ async function index(req, res) {
   };
 
   if (tasks.length === 0) {
-    return res.status(404).send();
+    return res.status(404).sendjson({
+      message: "no tasks"
+    });
   }
   return res.status(200).json({
     tasks,

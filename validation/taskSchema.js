@@ -14,21 +14,26 @@ const patchTaskSchema = Joi.object({
   .min(1)
   .message("No attributes to change were specified.");
 
-const paginationSchema = Joi.object({
-  page: Joi.number().min(1).default(1),
-  limit: Joi.number().min(1).max(100).default(10)
-}).unknown(true);
-
-const taskFilterSchema = Joi.object({
+const querySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  find: Joi.string().trim().error(new Error("testing find error")),
   isCompleted: Joi.boolean(),
   priority: Joi.string().valid("low", "medium", "high"),
   min_date: Joi.date(),
-  max_date: Joi.date()
+  max_date: Joi.date().when("min_date", {
+    then: Joi.date().greater(Joi.ref("min_date")),
+    otherwise: Joi.date()
+  }),
+  sortBy: Joi.string()
+    .trim()
+    .valid("title", "priority", "createdAt", "id", "isCompleted")
+    .default("createdAt"),
+  sortDirection: Joi.string().trim().valid("asc", "desc").default("desc")
 });
 
 module.exports = {
   taskSchema,
   patchTaskSchema,
-  paginationSchema,
-  taskFilterSchema
+  querySchema
 };
