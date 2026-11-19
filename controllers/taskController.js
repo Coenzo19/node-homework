@@ -142,12 +142,6 @@ async function index(req, res) {
     hasNext: value.page * value.limit < totalTasks,
     hasPrev: value.page > 1
   };
-
-  if (tasks.length === 0) {
-    return res.status(404).sendjson({
-      message: "no tasks"
-    });
-  }
   return res.status(200).json({
     tasks,
     pagination

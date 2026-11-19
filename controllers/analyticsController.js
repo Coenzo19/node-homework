@@ -68,8 +68,8 @@ async function getUserAnalytics(req, res) {
   return res.status(200).json({taskStats, recentTasks, weeklyProgress});
 }
 async function getUsersWithStats(req, res) {
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 10;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
   const usersRaw = await prisma.user.findMany({
@@ -119,7 +119,7 @@ async function searchTasks(req, res) {
 
   if (!req.query.q || req.query.q.trim().length < 2) {
     return res.status(400).json({
-      message:'search characters cannot be less then 1'
+      message: "search characters cannot be less then 1"
     });
   }
 

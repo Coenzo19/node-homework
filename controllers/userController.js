@@ -143,7 +143,7 @@ async function show(req, res) {
       email: true,
       createdAt: true,
       Task: {
-        where: {IsCompleted: false},
+        where: {isCompleted: false},
         select: {
           id: true,
           title: true,
@@ -151,9 +151,9 @@ async function show(req, res) {
           createdAt: true
         },
         orderBy: {
-          createdAt: "desc",
-          take: 5
-        }
+          createdAt: "desc"
+        },
+        take: 5
       }
     }
   });
