@@ -18,7 +18,7 @@ async function create(req, res) {
     data: {
       title: value.title,
       isCompleted: value.isCompleted,
-      userId: global.user_id,
+      userId: req.user.id,
       priority: value.priority
     },
     select: {
@@ -53,7 +53,7 @@ async function bulkCreate(req, res, next) {
       title: value.title,
       isCompleted: value.isCompleted,
       priority: value.priority || "medium",
-      userId: global.user_id
+      userId: req.user.id
     });
   }
   try {
@@ -73,7 +73,7 @@ async function bulkCreate(req, res, next) {
 }
 
 async function index(req, res) {
-  const whereClause = {userId: global.user_id};
+  const whereClause = {userId: req.user.id};
   const dataFilter = {};
 
   const {error, value} = querySchema.validate(req.query, {
@@ -164,7 +164,7 @@ async function show(req, res) {
     },
     where: {
       id: taskId,
-      userId: global.user_id
+      userId: req.user.id
     }
   });
 
@@ -198,7 +198,7 @@ async function update(req, res, next) {
       data: value,
       where: {
         id: taskId,
-        userId: global.user_id
+        userId: req.user.id
       },
       select: {
         id: true,
@@ -228,7 +228,7 @@ async function deleteTask(req, res, next) {
     const deletedTask = await prisma.task.delete({
       where: {
         id: taskId,
-        userId: global.user_id
+        userId: req.user.id
       },
       select: {
         id: true,
