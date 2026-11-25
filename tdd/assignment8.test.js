@@ -5,7 +5,9 @@ const httpMocks = require("node-mocks-http");
 const EventEmitter = require("events").EventEmitter;
 const jwt = require("jsonwebtoken");
 const waitForRouteHandlerCompletion = require("./waitForRouteHandlerCompletion");
-
+jest.mock("express-xss-sanitizer", () => ({
+  xss: () => (_req, _res, next) => next(),
+}));
 const {
   index,
   show,
@@ -41,6 +43,7 @@ let saveData = null;
 let saveTaskId = null;
 
 beforeAll(async () => {
+  
   await prisma.Task.deleteMany(); // delete all tasks
   await prisma.User.deleteMany(); // delete all users
 });

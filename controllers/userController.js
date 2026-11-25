@@ -3,6 +3,25 @@ const util = require("util");
 const scrypt = util.promisify(crypto.scrypt);
 const {userSchema} = require("../validation/userSchema");
 const prisma = require("../db/prisma");
+const {randomUUID} = require("crypto");
+const jwt = require("jsonwebtoken");
+
+const cookieFlags = (req) => {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // only when HTTPS is available
+    sameSite: "Strict"
+  };
+};
+
+const setJwtCookie = (req, res, user) => {
+  // Sign JWT
+  const payload = {id: user.id, csrfToken: randomUUID()};
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"}); // 1 hour expiration
+  // Set cookie.  Note that the cookie flags have to be different in production and in test.
+  res.cookie("jwt", token, {...cookieFlags(req), maxAge: 3600000}); // 1 hour expiration
+  return payload.csrfToken; // this is needed in the body returned by logon() or register()
+};
 
 async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -72,11 +91,12 @@ async function register(req, res, next) {
       });
       return {user: newUser, getWelcomeTasks};
     });
-    global.user_id = newUser.id;
+
     return res.status(201).json({
       user: result.user,
       welcomeTasks: result.getWelcomeTasks,
-      transactionStatus: "success"
+      transactionStatus: "success",
+      csrfToken: setJwtCookie(req, res, result.user)
     });
   } catch (err) {
     if (err.name === "PrismaClientKnownRequestError" && err.code === "P2002") {
@@ -112,15 +132,15 @@ async function logon(req, res) {
     return res.status(401).send();
   }
 
-  global.user_id = user.id;
   return res.status(200).json({
     name: user.name,
-    email: user.email
+    email: user.email,
+    csrfToken: setJwtCookie(req, res, user)
   });
 }
 
 function logoff(req, res) {
-  global.user_id = null;
+  res.clearCookie("jwt", cookieFlags(req));
   return res.status(200).send();
 }
 

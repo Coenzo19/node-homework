@@ -6,18 +6,31 @@ const timeRouter = require("./routes/timeRoutes");
 const userRouter = require("./routes/userRoutes");
 const taskRouter = require("./routes/taskRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
-
 const errorHandler = require("./middleware/error-handler");
 const notFoundHandler = require("./middleware/not-found");
-const authMiddleware = require("./middleware/auth");
+const jwtMiddleware = require("./middleware/jwtMiddleware");
+const cookieParser = require("cookie-parser");
+app.set("trust proxy", 1);
+const helmet = require("helmet");
+const {xss} = require("express-xss-sanitizer");
+const rateLimiter = require("express-rate-limit");
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+  })
+);
 
-global.user_id = null;
-
+app.use(helmet());
 app.use(express.json());
+app.use(cookieParser());
+
+app.use(xss());
+
 app.use("/api/users", userRouter);
 app.use("/api", timeRouter);
-app.use("/api/tasks", authMiddleware, taskRouter);
-app.use("/api/analytics", authMiddleware, analyticsRoutes);
+app.use("/api/tasks", jwtMiddleware, taskRouter);
+app.use("/api/analytics", jwtMiddleware, analyticsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
